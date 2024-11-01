@@ -11,6 +11,7 @@ Node.js 20 LTS を事前インストールしておいてください
 ```shell
 cd playwright-kot-autocheck
 npm install
+npx playwright install
 ```
 
 ### KOT ログイン情報の設定
