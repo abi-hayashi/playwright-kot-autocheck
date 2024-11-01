@@ -25,8 +25,30 @@ KOT_LOGIN_ID=dcieit3XXXXX
 KOT_LOGIN_PASSWORD="your_password"
 ```
 
-### 実行
+### ローカルでのテスト実行
 
 ```shell
 npx playwright test
 ```
+
+### AWS Lambdaへの移行
+
+設定にて下記を更新
+* タイムアウト: 2mほど
+* メモリサイズ: 512MB
+
+下記レイヤーを設定
+* arn:aws:lambda:ap-northeast-1:409979564664:layer:slack-web-api:1
+  * slack web api用
+* arn:aws:lambda:ap-northeast-1:764866452798:layer:chrome-aws-lambda:49
+  * 下記サイトから拝借、playwright chromium用
+    * https://github.com/shelfio/chrome-aws-lambda-layer
+* arn:aws:lambda:ap-northeast-1:409979564664:layer:playwright-layer:1
+  * その他ライブラリ用
+
+環境変数を設定
+
+`lambda`配下の下記ファイルを関数に配置
+  * checkKot.mjs
+  * index.mjs
+  * postSlack.mjs
