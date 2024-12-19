@@ -2,7 +2,7 @@ import { chromium as playwright } from "playwright";
 import { expect } from "@playwright/test";
 import chromium from '@sparticuz/chromium';
 
-export async function checkKot(){
+export async function checkKot(loginId, loginPassword){
     /*
         KOTの未申請の打刻エラーを確認し、文字列のリストを返します
         打刻エラーが存在する場合：
@@ -33,14 +33,14 @@ export async function checkKot(){
         await expect(page).toHaveTitle(/KING OF TIME/);
         
         // ログインID入力
-        const loginId = await page.$("input#login_id");
-        expect(loginId).not.toBeNull();
-        loginId?.fill(process.env.KOT_LOGIN_ID);
+        const loginIdPage = await page.$("input#login_id");
+        expect(loginIdPage).not.toBeNull();
+        loginIdPage?.fill(loginId);
         
         // パスワード入力
-        const loginPassword = await page.$("input#login_password");
-        expect(loginPassword).not.toBeNull();
-        loginPassword?.fill(process.env.KOT_LOGIN_PASSWORD);
+        const loginPasswordPage = await page.$("input#login_password");
+        expect(loginPasswordPage).not.toBeNull();
+        loginPasswordPage?.fill(loginPassword);
         
         // ログインボタンクリック
         const loginButton = await page.$("input#login_button");
