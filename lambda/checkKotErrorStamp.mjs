@@ -2,7 +2,7 @@ import { chromium as playwright } from "playwright";
 import { expect } from "@playwright/test";
 import chromium from '@sparticuz/chromium';
 
-export async function checkKot(loginId, loginPassword){
+export async function checkKotErrorStamp(loginId, loginPassword){
     /*
         KOTの未申請の打刻エラーを確認し、文字列のリストを返します
         打刻エラーが存在する場合：
@@ -12,7 +12,7 @@ export async function checkKot(loginId, loginPassword){
     */
     try{
         // KOTの初回表示ガイドが表示されないようにする
-        console.log('==== checkKot Start ====');
+        console.log('==== checkKotErrorStamp Start ====');
 
         const browser = await playwright.launch({
             args: chromium.args, // ライブラリ提供
@@ -111,27 +111,30 @@ export async function checkKot(loginId, loginPassword){
         for (const tr of trList) {
             const tdList = await tr.$$("td");
         
-            const name = (await tdList[2].textContent());
-            const dt = (await tdList[6].textContent());
-            const errorReason = (await tdList[9].textContent());
+            const tmpName = (await tdList[2].textContent());
+            const name = tmpName.trim();
+            const tmpDt = (await tdList[6].textContent());
+            const dt = tmpDt.trim();
+            const tmpErrorReason = (await tdList[9].textContent());
+            const errorReason = tmpErrorReason.trim();
         
             // 申請有無判定
             const shinseiIcon = await tdList[9].$("span.specific-requested");
             if (shinseiIcon) {
                 // 申請済みの場合はスキップ
-                console.log('==== 申請済みのためスキップ ====');
+                console.log(`==== 申請済みのためスキップ ${name} ${dt} ====`);
                 continue;
             }
         
-            lineArr = [name.trim(), dt.trim(), errorReason.trim()];
+            lineArr = [name, dt, errorReason];
             console.log(lineArr.join(" "));
             errorList.push(lineArr)
         }
         return errorList;
     }catch(error){
-        console.error('checkKot Error:',error);
+        console.error('checkKotErrorStamp Error:',error);
     }finally{
-        console.log('==== checkKot End ====');
+        console.log('==== checkKotErrorStamp End ====');
     }
 }
 
