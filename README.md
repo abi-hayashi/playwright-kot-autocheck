@@ -37,7 +37,10 @@ npx playwright test
 
 設定にて下記を更新
 * タイムアウト: 2mほど
-* メモリサイズ: 512MB
+* メモリサイズ: 1088MB
+  * テスト実行（12/20, SI3Gのみ）でMax Usedが1088MB、処理時間は3分10秒
+  * lambdaの無料枠は1ヶ月あたり400,000GB秒であり、メモリサイズ1088MBで1回の実行が20分だとしても313回実行できる
+    * https://docs.aws.amazon.com/ja_jp/whitepapers/latest/how-aws-pricing-works/aws-lambda.html
 
 下記レイヤーを設定
 * ~~arn:aws:lambda:ap-northeast-1:409979564664:layer:slack-web-api:1~~
@@ -52,7 +55,4 @@ npx playwright test
 
 環境変数を設定
 
-`lambda`配下の下記ファイルを関数に配置
-  * checkKot.mjs
-  * index.mjs
-  * postSlack.mjs
+`lambda`配下のファイル群を関数に配置

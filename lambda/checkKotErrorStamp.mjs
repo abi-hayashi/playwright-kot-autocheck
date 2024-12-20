@@ -20,6 +20,7 @@ export async function checkKotErrorStamp(loginId, loginPassword){
             executablePath: await chromium.executablePath() // ライブラリ提供(Chromium配置場所)
         });
         const page = await browser.newPage();
+        page.setDefaultTimeout(60000);
 
         await page.context().addInitScript(() => {
             // @ts-ignore
