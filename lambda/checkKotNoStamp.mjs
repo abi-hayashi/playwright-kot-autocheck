@@ -87,20 +87,20 @@ export async function checkKotNoStamp(loginId, loginPassword){
         await page.waitForLoadState("domcontentloaded");
         console.log('==== 打刻エラー勤務画面遷移完了 ====')
         
+        // 打刻なし/スケジュールありのaタグを取得
+        const noStampingATag = await page.$(
+            "div.htBlock-tab li:nth-child(2) a"
+        );
+        await noStampingATag.click();
+        console.log('==== 打刻なし/スケジュールあり画面遷移完了 ====')
+
         // 右上の表示ボタンの出現を待機
         await page.waitForSelector("input#display_button");
         
         const dispBtn = await page.$("input#display_button");
         await dispBtn?.click();
         await page.waitForLoadState("domcontentloaded");
-        
-        // 打刻なし/スケジュールありのaタグを取得
-        const noStampingATag = await page.$(
-            "div.htBlock-tab li:nth-child(2) a"
-        );
-        await noStampingATag.click();
 
-        console.log('==== 打刻なし/スケジュールあり画面遷移完了 ====')
         // 打刻なし/スケジュールありの一覧の枠のdivが表示されるまで待機
         const noStampingDiv = await page.$("div.htBlock-adjastableTableF_inner")
         // 月初など打刻エラーが存在しない場合はdivが表示されないことがある
