@@ -11,12 +11,13 @@ test("KOT打刻エラー確認とslack送信", async ({ page }) => {
       3. 打刻エラーあり
       4. その他エラーケース
   */
+ test.setTimeout(600000);
   try{
 
     console.log('==== test Start ====');
     const errorList = await checkKot({ page });
     if(errorList){
-      await postSlack(errorList);
+      // await postSlack(errorList);
     }else{
       throw new Error("checkKot errorList is undefined")
     }
