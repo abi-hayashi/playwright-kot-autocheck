@@ -1,9 +1,9 @@
 import { expect } from "@playwright/test";
 
 // TODO: エラー投げたり空の配列returnするところを修正
-export async function checkKot({ page }){
+export async function checkKotNoStamp({ page }){
     /*
-        KOTの未申請の打刻エラーを確認し、文字列のリストを返します
+        KOTの打刻なし/スケジュールありのうち未申請のものを確認し、文字列のリストを返します
         打刻エラーが存在する場合：
             [氏名, 日付, エラー理由]
         打刻エラーが存在しない場合：
@@ -11,7 +11,7 @@ export async function checkKot({ page }){
     */
     try{
         // KOTの初回表示ガイドが表示されないようにする
-        console.log('==== checkKot Start ====');
+        console.log('==== checkKotNoStamp Start ====');
         await page.context().addInitScript(() => {
             // @ts-ignore
             window.localStorage.setItem("intro", "checked");
@@ -65,59 +65,25 @@ export async function checkKot({ page }){
         if(errorKinmu){
             errorKinmuVisible = await errorKinmu.isVisible();
             if (!errorKinmuVisible) {
-            console.log("打刻エラーはありません");
+            console.log("打刻なし/スケジュールありはありません");
             return [];
             }
         }else{
-            console.log("打刻エラーはありません");
+            console.log("打刻なし/スケジュールありはありません");
             return [];
         }
-        
+
         // 打刻エラー勤務のリンクをクリック
         await errorKinmu?.click();
         await page.waitForLoadState("domcontentloaded");
         console.log('==== 打刻エラー勤務画面遷移完了 ====')
-        
+
         // 右上の表示ボタンの出現を待機
         await page.waitForSelector("input#display_button");
         
         const dispBtn = await page.$("input#display_button");
         await dispBtn?.click();
         await page.waitForLoadState("domcontentloaded");
-        
-        // 打刻エラーの一覧の枠のdivが表示されるまで待機
-        const errorKinmuDiv = await page.$("div.htBlock-adjastableTableF_inner")
-        // 月初など打刻エラーが存在しない場合はdivが表示されないことがある
-        if(!errorKinmuDiv){
-            console.log("打刻エラーはありません");
-            return [];
-        }
-        
-        const trList = await page.$$(
-            "div.htBlock-adjastableTableF_inner > table > tbody > tr"
-        );
-
-        let errorList: string[][] = [];
-        let lineArr: string[] = [];
-        for (const tr of trList) {
-            const tdList = await tr.$$("td");
-        
-            const name = (await tdList[2].textContent()) as string;
-            const dt = (await tdList[6].textContent()) as string;
-            const errorReason = (await tdList[9].textContent()) as string;
-        
-            // 申請有無判定
-            const shinseiIcon = await tdList[9].$("span.specific-requested");
-            if (shinseiIcon) {
-                // 申請済みの場合はスキップ
-                console.log('==== 申請済みのためスキップ ====');
-                continue;
-            }
-        
-            lineArr = [name.trim(), dt.trim(), errorReason.trim()];
-            console.log(lineArr.join(" "));
-            errorList.push(lineArr)
-        }
 
         // 打刻なし/スケジュールありのaタグを取得
         const noStampingATag = await page.$(
@@ -130,10 +96,12 @@ export async function checkKot({ page }){
         const noStampingDiv = await page.$("div.htBlock-adjastableTableF_inner")
         // 月初など打刻エラーが存在しない場合はdivが表示されないことがある
         if(!noStampingDiv){
-            console.log("打刻エラーはありません");
+            console.log("打刻なし/スケジュールありはありません");
             return [];
         }
 
+        let errorList: string[][] = [];
+        let lineArr: string[] = [];
         let noStampingTrList = await page.$$(
             "div.htBlock-adjastableTableF_inner > table > tbody > tr"
         );
@@ -148,22 +116,21 @@ export async function checkKot({ page }){
             const tr = noStampingTrList[i];
             const tdList = await tr.$$("td");
         
-            const name = (await tdList[2].textContent()) as string;
+            const tmpName = (await tdList[2].textContent()) as string;
+            const name = tmpName.trim();
             const timeCardButton = await tdList[3].$(
                 "form > p > button.htBlock-buttonTimecard.htBlock-buttonTimecard_fill"
             );
-            const noStampingDt = (await tdList[6].textContent()) as string;
+            const tmpNoStampingDt = (await tdList[6].textContent()) as string;
+            const noStampingDt = tmpNoStampingDt.trim();
 
-            if(passEmployeeIds.includes(name.trim().substring(0,5))){
-                console.log(`==== ${name.trim()} ${noStampingDt.trim()} 休職中の社員のためスキップ ====`);
+            if(passEmployeeIds.includes(name.substring(0,5))){
+                console.log(`==== 休職中の社員のためスキップ ${name} ${noStampingDt} ====`);
                 continue;
             }
 
             // 各個人のタイムカードをクリック
             await timeCardButton?.click();
-
-            // ナビゲーションが完了するまで待機
-            // await page.waitForNavigation();
 
             const timeCardTrList = await page.$$(
                 "div.htBlock-adjastableTableF_inner > table > tbody > tr"
@@ -177,15 +144,14 @@ export async function checkKot({ page }){
                     const shukkinShinseiIcon = await timeCardTdList[6].$("span.specific-requested");
                     const taikinShinseiIcon = await timeCardTdList[7].$("span.specific-requested");
                     if(scheduleShinseiIcon || shukkinShinseiIcon || taikinShinseiIcon){
-                        console.log('==== 申請済みのためスキップ ====');
+                        console.log(`==== 申請済みのためスキップ ${name} ${noStampingDt} ====`);
                         continue;
                     }
-                    lineArr = [name.trim(), noStampingDt.trim(), "打刻データがありません。".trim()];
+                    lineArr = [name, noStampingDt, "打刻データがありません。"];
                     console.log(lineArr.join(" "));
                     errorList.push(lineArr)
                     break;
                 }else{
-                    // console.log('==== タイムカード 日付が一致しません ====');
                     continue;
                 }
             }
@@ -197,9 +163,9 @@ export async function checkKot({ page }){
         }
         return errorList;
     }catch(error){
-        console.error('checkKot Error:',error);
+        console.error('checkKotNoStamp Error:',error);
     }finally{
-        console.log('==== checkKot End ====');
+        console.log('==== checkKotNoStamp End ====');
     }
 }
 

@@ -1,5 +1,6 @@
 import { test } from "@playwright/test";
-import { checkKot } from "./checkKot";
+import { checkKotErrorStamp } from "./checkKotErrorStamp";
+import { checkKotNoStamp } from "./checkKotNoStamp";
 import { postSlack } from "./postSlack";
 
 test("KOT打刻エラー確認とslack送信", async ({ page }) => {
@@ -15,9 +16,9 @@ test("KOT打刻エラー確認とslack送信", async ({ page }) => {
   try{
 
     console.log('==== test Start ====');
-    const errorList = await checkKot({ page });
+    const errorList = await checkKotErrorStamp({ page });
     if(errorList){
-      // await postSlack(errorList);
+      await postSlack(errorList);
     }else{
       throw new Error("checkKot errorList is undefined")
     }
@@ -29,3 +30,21 @@ test("KOT打刻エラー確認とslack送信", async ({ page }) => {
   }
 });
 
+test("KOT打刻なし/スケジュールあり確認とslack送信", async ({ page }) => {
+ test.setTimeout(600000);
+  try{
+
+    console.log('==== test Start ====');
+    const errorList = await checkKotNoStamp({ page });
+    if(errorList){
+      await postSlack(errorList);
+    }else{
+      throw new Error("checkKot errorList is undefined")
+    }
+
+  }catch(error){
+    console.error('test Error:',error);
+  }finally{
+    console.log('==== test End ====');
+  }
+});
